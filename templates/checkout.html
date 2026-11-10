@@ -3,78 +3,755 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Checkout OLTS Tech</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Finalizar pagamento · OLTS Tech</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       CHECKOUT OLTS TECH — design system próprio (sem framework)
+       preto #050505 · azul #006BB6 (só acento/estrutura) · cinza #E5E7EB
+       IBM Plex Sans/Mono · hairlines · raio 10 · pílula 999 no CTA
+       ============================================================ */
+    :root {
+      --bg: #050505;
+      --panel: #0a0a0a;
+      --panel-2: #101010;
+      --line: #262626;
+      --line-2: #333333;
+      --paper: #e9ecef;
+      --body: #e5e7eb;
+      --muted: #a8aba4;
+      --accent: #006bb6;
+      --accent-bright: #4e9ee0;
+      --danger: #e5484d;
+      --font: 'IBM Plex Sans', system-ui, sans-serif;
+      --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--body);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    /* classes que o script do checkout alterna (mantidas de propósito).
+       !important por causa da colisão de especificidade com #overlay{display:flex}
+       e .campos{display:grid} — sem isso o overlay nunca some. */
+    .hidden { display: none !important; }
+    .opacity-0 { opacity: 0; }
+    .opacity-50 { opacity: .5; }
+    .pointer-events-none { pointer-events: none; }
+
+    .page {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px 72px;
+    }
+
+    /* ------------------------------------------------ topline */
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 26px 0 24px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 44px;
+    }
+
+    .marca {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: .04em;
+      color: var(--paper);
+    }
+
+    .marca__no {
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      border-radius: 2px;
+      flex: none;
+    }
+
+    .marca small {
+      display: block;
+      font-weight: 500;
+      font-size: 12px;
+      letter-spacing: .16em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .topline__seguro {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .topline__seguro svg { flex: none; }
+
+    /* ------------------------------------------------ grade */
+    .grade {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+      gap: 56px;
+      align-items: start;
+    }
+
+    /* ------------------------------------------------ cabeçalho do form */
+    .passo {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      margin-bottom: 10px;
+    }
+
+    .passo__traco {
+      width: 22px;
+      height: 3px;
+      background: var(--accent);
+      transform: translateY(-6px);
+      flex: none;
+    }
+
+    .passo span {
+      font-size: 13px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 36px;
+      line-height: 1.12;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      color: var(--paper);
+    }
+
+    .sub {
+      margin: 0 0 30px;
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 46ch;
+    }
+
+    /* ------------------------------------------------ seletor de método */
+    .metodos {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 6px;
+      margin-bottom: 28px;
+    }
+
+    .metodo {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 8px;
+      border-radius: 7px;
+      border: 1px solid transparent;
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: color .15s ease, background .15s ease, border-color .15s ease;
+      text-align: center;
+    }
+
+    .metodo input {
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+      margin: 0;
+    }
+
+    .metodo:hover { color: var(--body); }
+
+    .metodo:has(input:checked) {
+      background: rgba(0, 107, 182, .16);
+      border-color: var(--accent);
+      color: var(--paper);
+    }
+
+    .metodo:has(input:focus-visible) {
+      outline: 2px solid var(--accent-bright);
+      outline-offset: 2px;
+    }
+
+    .metodo svg { flex: none; opacity: .85; }
+
+    /* ------------------------------------------------ blocos de campos */
+    fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+
+    .campos {
+      display: grid;
+      gap: 18px;
+    }
+
+    .linha2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .linha3 {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr 1fr;
+      gap: 18px;
+    }
+
+    .campo { display: flex; flex-direction: column; gap: 7px; }
+
+    .campo label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: .02em;
+    }
+
+    .campo input {
+      width: 100%;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--body);
+      font-family: var(--font);
+      font-size: 15.5px;
+      padding: 13px 15px;
+      transition: border-color .15s ease;
+    }
+
+    .campo input::placeholder { color: #6b6f6a; }
+
+    .campo input:hover { border-color: var(--line-2); }
+
+    .campo input:focus {
+      outline: none;
+      border-color: var(--accent-bright);
+      box-shadow: 0 0 0 3px rgba(78, 158, 224, .18);
+    }
+
+    .campo input[inputmode="numeric"] { font-family: var(--mono); letter-spacing: .05em; }
+
+    .nota-campo {
+      font-size: 12.5px;
+      color: #7d817c;
+    }
+
+    /* ------------------------------------------------ resumo do pedido */
+    .resumo {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 28px 26px;
+      position: sticky;
+      top: 28px;
+    }
+
+    .resumo h2 {
+      margin: 0 0 22px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .resumo__item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .resumo__desc {
+      font-size: 15.5px;
+      color: var(--body);
+    }
+
+    .resumo__qtd {
+      display: block;
+      margin-top: 4px;
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
+    .resumo__valor {
+      font-family: var(--mono);
+      font-weight: 600;
+      font-size: 26px;
+      color: var(--paper);
+      white-space: nowrap;
+      letter-spacing: -.01em;
+    }
+
+    .resumo__total {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 0 4px;
+    }
+
+    .resumo__total span {
+      font-size: 13px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .resumo__total strong {
+      font-family: var(--mono);
+      font-size: 30px;
+      font-weight: 600;
+      color: var(--paper);
+      letter-spacing: -.01em;
+    }
+
+    .resumo__meios {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .resumo__meios b {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .confianca {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      gap: 11px;
+    }
+
+    .confianca li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13.5px;
+      color: var(--muted);
+      list-style: none;
+    }
+
+    .confianca ul { margin: 0; padding: 0; }
+
+    .confianca svg { flex: none; color: var(--accent-bright); }
+
+    /* ------------------------------------------------ botão pagar */
+    .pagar {
+      margin-top: 30px;
+      width: 100%;
+      background: var(--accent);
+      color: #ffffff;
+      border: 0;
+      border-radius: 999px;
+      font-family: var(--font);
+      font-size: 16.5px;
+      font-weight: 700;
+      padding: 16px 24px;
+      cursor: pointer;
+      transition: background .15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .pagar:hover { background: #0a7ac9; }
+    .pagar:active { transform: translateY(1px); }
+
+    .pagar:focus-visible {
+      outline: 2px solid var(--accent-bright);
+      outline-offset: 3px;
+    }
+
+    .pagar__valor { font-family: var(--mono); font-weight: 600; }
+
+    .seguranca-linha {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+      font-size: 12.5px;
+      color: #7d817c;
+    }
+
+    /* ------------------------------------------------ overlay */
+    #overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      background: rgba(5, 5, 5, .96);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      text-align: center;
+      padding: 32px;
+      transition: opacity .35s ease;
+    }
+
+    #overlay.overlay--ok { background: rgba(5, 12, 18, .97); }
+    #overlay.overlay--erro { background: rgba(18, 5, 6, .97); }
+
+    #spinner {
+      width: 46px;
+      height: 46px;
+      border: 3px solid var(--line-2);
+      border-top-color: var(--accent-bright);
+      border-radius: 50%;
+      animation: girar .8s linear infinite;
+    }
+
+    @keyframes girar { to { transform: rotate(360deg); } }
+
+    #overlay-text { color: var(--body); font-size: 15.5px; }
+
+    .estado { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+
+    .estado__icone {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--accent-bright);
+      color: var(--accent-bright);
+    }
+
+    .estado--erro .estado__icone {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .estado__titulo {
+      margin: 0;
+      font-size: 23px;
+      font-weight: 700;
+      color: var(--paper);
+    }
+
+    .estado__apoio {
+      margin: 0;
+      font-size: 14.5px;
+      color: var(--muted);
+      max-width: 38ch;
+    }
+
+    #new-payment-btn {
+      margin-top: 6px;
+      background: transparent;
+      color: var(--paper);
+      border: 1px solid var(--line-2);
+      border-radius: 999px;
+      font-family: var(--font);
+      font-size: 14.5px;
+      font-weight: 600;
+      padding: 11px 22px;
+      cursor: pointer;
+      transition: border-color .15s ease, background .15s ease;
+    }
+
+    #new-payment-btn:hover { border-color: var(--accent-bright); background: rgba(0, 107, 182, .12); }
+
+    #checkout-container {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 40px 40px 44px;
+      transition: opacity .35s ease;
+      min-height: 480px;
+    }
+
+    /* ------------------------------------------------ mobile */
+    @media (max-width: 900px) {
+      .grade { grid-template-columns: 1fr; gap: 32px; }
+      .resumo { position: static; order: -1; }
+      h1 { font-size: 30px; }
+      #checkout-container { padding: 28px 22px 34px; }
+      .linha3 { grid-template-columns: 1fr 1fr; }
+      .linha3 .campo:first-child { grid-column: 1 / -1; }
+      .topline { margin-bottom: 32px; }
+    }
+
+    @media (max-width: 560px) {
+      .linha2 { grid-template-columns: 1fr; }
+      .metodos { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
-  <div class="relative w-full max-w-md">
-    <!-- Overlay de carregamento e confirmação -->
-    <div id="overlay" class="absolute inset-0 z-50 bg-white bg-opacity-90 flex flex-col items-center justify-center space-y-4 rounded-xl shadow-lg hidden transition-all duration-500">
-      <div id="spinner" class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-      <!-- Centralizar texto e ícones -->
-      <div id="overlay-text" class="flex flex-col items-center text-center text-lg font-medium text-gray-700">
-        Processando pagamento...
+<body>
+  <div class="page">
+    <header class="topline">
+      <div class="marca">
+        <span class="marca__no" aria-hidden="true"></span>
+        <span>OLTS Tech<small>Checkout</small></span>
       </div>
-      <button id="new-payment-btn" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition hidden z-50">Fazer novo pagamento</button>
-    </div>
+      <div class="topline__seguro">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <rect x="4" y="11" width="16" height="10" rx="2"></rect>
+          <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+        </svg>
+        Ambiente seguro
+      </div>
+    </header>
 
-    <div id="checkout-container" class="relative bg-white rounded-xl shadow-md p-6 transition-opacity duration-500">
-      <h1 class="text-2xl font-semibold text-center mb-6">Checkout OLTS Tech</h1>
-      <form id="payment-form" class="space-y-4">
-        <div class="flex justify-center space-x-6">
-          <label class="flex items-center space-x-2">
-            <input type="radio" name="payment_method" value="card" checked class="text-blue-600">
-            <span>Cartão de Crédito</span>
-          </label>
-          <label class="flex items-center space-x-2">
-            <input type="radio" name="payment_method" value="pix" class="text-green-600">
-            <span>PIX</span>
-          </label>
-          <label class="flex items-center space-x-2">
-            <input type="radio" name="payment_method" value="boleto" class="text-yellow-600">
-            <span>Boleto</span>
-          </label>
+    <div class="grade">
+      <!-- ============================ formulário ============================ -->
+      <section id="checkout-container" class="opacity-transition">
+        <div class="passo">
+          <span class="passo__traco" aria-hidden="true"></span>
+          <span>Pagamento</span>
         </div>
+        <h1>Finalizar pagamento</h1>
+        <p class="sub">Escolha como quer pagar e confirme os dados do pedido. Leva menos de um minuto.</p>
 
-        <!-- Cartão -->
-        <div id="card-fields" class="space-y-3">
-          <input type="text" name="card_number" placeholder="Número do Cartão" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <div class="grid grid-cols-3 gap-2">
-            <input type="text" name="expiration_month" placeholder="MM" required class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <input type="text" name="expiration_year" placeholder="AAAA" required class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <input type="password" name="security_code" placeholder="CVC" required class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <!-- overlay de carregamento e confirmação -->
+        <div id="overlay" class="hidden">
+          <div id="spinner"></div>
+          <!-- Centralizar texto e ícones -->
+          <div id="overlay-text">
+            Processando pagamento...
           </div>
-          <input type="text" name="cardholder_name" placeholder="Nome no Cartão" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <input type="text" name="identification_number" placeholder="CPF" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <input type="number" name="installments" placeholder="Parcelas" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <button id="new-payment-btn" class="hidden" type="button">Fazer novo pagamento</button>
         </div>
 
-        <!-- PIX -->
-        <div id="pix-fields" class="hidden space-y-3">
-          <p class="text-gray-700 text-center">Você receberá um QR Code para pagar via PIX.</p>
-          <input type="text" name="identification_number" placeholder="CPF" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+        <form id="payment-form">
+          <fieldset>
+            <legend class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Forma de pagamento</legend>
+            <div class="metodos" role="radiogroup" aria-label="Forma de pagamento">
+              <label class="metodo">
+                <input type="radio" name="payment_method" value="card" checked>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <rect x="2.5" y="5.5" width="19" height="13" rx="2"></rect>
+                  <path d="M2.5 10h19"></path>
+                </svg>
+                Cartão de crédito
+              </label>
+              <label class="metodo">
+                <input type="radio" name="payment_method" value="pix">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <path d="M12 3.5 20.5 12 12 20.5 3.5 12z"></path>
+                </svg>
+                PIX
+              </label>
+              <label class="metodo">
+                <input type="radio" name="payment_method" value="boleto">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <path d="M5 3.5h14v17l-2.3-1.6-2.4 1.6-2.3-1.6-2.4 1.6L7.3 19 5 20.5z"></path>
+                  <path d="M8.5 8h7M8.5 11.5h7M8.5 15h4"></path>
+                </svg>
+                Boleto
+              </label>
+            </div>
+          </fieldset>
+
+          <!-- Cartão -->
+          <fieldset id="card-fields" class="campos">
+            <div class="campo">
+              <label for="card_number">Número do cartão</label>
+              <input type="text" id="card_number" name="card_number" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" required>
+            </div>
+            <div class="linha3">
+              <div class="campo">
+                <label for="expiration_month">Validade</label>
+                <input type="text" id="expiration_month" name="expiration_month" inputmode="numeric" autocomplete="cc-exp" placeholder="MM" required>
+              </div>
+              <div class="campo">
+                <label for="expiration_year">&nbsp;</label>
+                <input type="text" id="expiration_year" name="expiration_year" inputmode="numeric" autocomplete="cc-exp" placeholder="AAAA" required>
+              </div>
+              <div class="campo">
+                <label for="security_code">&nbsp;</label>
+                <input type="password" id="security_code" name="security_code" inputmode="numeric" autocomplete="cc-csc" placeholder="CVC" required>
+              </div>
+            </div>
+            <div class="campo">
+              <label for="cardholder_name">Nome impresso no cartão</label>
+              <input type="text" id="cardholder_name" name="cardholder_name" autocomplete="cc-name" placeholder="Como aparece no cartão" required>
+            </div>
+            <div class="linha2">
+              <div class="campo">
+                <label for="card-identification_number">CPF do titular</label>
+                <input type="text" id="card-identification_number" name="identification_number" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" required>
+              </div>
+              <div class="campo">
+                <label for="installments">Parcelas</label>
+                <input type="number" id="installments" name="installments" min="1" max="12" placeholder="1" required>
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- PIX -->
+          <fieldset id="pix-fields" class="campos hidden">
+            <div class="campo">
+              <p class="nota-campo" style="margin:0;">Você recebe um QR Code para pagar na hora — ele expira em 30 minutos.</p>
+            </div>
+            <div class="campo">
+              <label for="pix-identification_number">CPF</label>
+              <input type="text" id="pix-identification_number" name="identification_number" inputmode="numeric" placeholder="000.000.000-00" required>
+            </div>
+          </fieldset>
+
+          <!-- Boleto -->
+          <fieldset id="boleto-fields" class="campos hidden">
+            <div class="linha2">
+              <div class="campo">
+                <label for="first_name">Primeiro nome</label>
+                <input type="text" id="first_name" name="first_name" placeholder="Como no documento" required>
+              </div>
+              <div class="campo">
+                <label for="last_name">Sobrenome</label>
+                <input type="text" id="last_name" name="last_name" placeholder="Completo" required>
+              </div>
+            </div>
+            <div class="campo">
+              <label for="boleto-identification_number">CPF</label>
+              <input type="text" id="boleto-identification_number" name="identification_number" inputmode="numeric" placeholder="000.000.000-00" required>
+            </div>
+            <div class="campo">
+              <label for="zip_code">CEP</label>
+              <input type="text" id="zip_code" name="zip_code" inputmode="numeric" placeholder="00000-000" required>
+            </div>
+            <div class="linha2">
+              <div class="campo">
+                <label for="street_name">Logradouro</label>
+                <input type="text" id="street_name" name="street_name" placeholder="Rua ou avenida" required>
+              </div>
+              <div class="campo">
+                <label for="street_number">Número</label>
+                <input type="text" id="street_number" name="street_number" placeholder="000" required>
+              </div>
+            </div>
+            <div class="linha2">
+              <div class="campo">
+                <label for="neighborhood">Bairro</label>
+                <input type="text" id="neighborhood" name="neighborhood" placeholder="Seu bairro" required>
+              </div>
+              <div class="campo">
+                <label for="city">Cidade</label>
+                <input type="text" id="city" name="city" placeholder="Sua cidade" required>
+              </div>
+            </div>
+            <div class="campo">
+              <label for="federal_unit">Estado (UF)</label>
+              <input type="text" id="federal_unit" name="federal_unit" maxlength="2" placeholder="SP" required>
+            </div>
+          </fieldset>
+
+          <!-- Comuns -->
+          <div class="campos" style="margin-top:18px;padding-top:18px;border-top:1px solid var(--line);">
+            <div class="campo">
+              <label for="email">E-mail para a confirmação</label>
+              <input type="email" id="email" name="email" autocomplete="email" placeholder="voce@empresa.com.br" required>
+            </div>
+            <div class="linha2">
+              <div class="campo">
+                <label for="transaction_amount">Valor da compra (R$)</label>
+                <input type="number" id="transaction_amount" name="transaction_amount" value="100" step="0.01" min="1" required>
+              </div>
+              <div class="campo">
+                <label for="description">Descrição do pedido</label>
+                <input type="text" id="description" name="description" value="Teste de Pagamento">
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="pagar">
+            Pagar <span class="pagar__valor" id="valor-botao">R$&nbsp;100,00</span>
+          </button>
+          <p class="seguranca-linha">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <rect x="4" y="11" width="16" height="10" rx="2"></rect>
+              <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+            </svg>
+            Pagamento processado com criptografia pelo Mercado Pago
+          </p>
+        </form>
+      </section>
+
+      <!-- ============================ resumo ============================ -->
+      <aside class="resumo">
+        <h2>Resumo do pedido</h2>
+        <div class="resumo__item">
+          <div>
+            <span class="resumo__desc" id="resumo-desc">Teste de Pagamento</span>
+            <span class="resumo__qtd">Pedido único · pagamento à vista</span>
+          </div>
         </div>
-
-        <!-- Boleto -->
-        <div id="boleto-fields" class="hidden space-y-3">
-          <input type="text" name="first_name" placeholder="Primeiro nome" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-          <input type="text" name="last_name" placeholder="Sobrenome" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-          <input type="text" name="identification_number" placeholder="CPF" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-          <input type="text" name="zip_code" placeholder="CEP" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-          <input type="text" name="street_name" placeholder="Logradouro" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-          <input type="text" name="street_number" placeholder="Número" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-          <input type="text" name="neighborhood" placeholder="Bairro" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-          <input type="text" name="city" placeholder="Cidade" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-          <input type="text" name="federal_unit" placeholder="Estado (UF)" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+        <div class="resumo__total">
+          <span>Total</span>
+          <strong id="resumo-valor">R$&nbsp;100,00</strong>
         </div>
-
-        <!-- Comuns -->
-        <input type="email" name="email" placeholder="Seu e-mail" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <input type="number" name="transaction_amount" placeholder="Valor (R$)" value="100" step="0.01" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <input type="text" name="description" placeholder="Descrição" value="Teste de Pagamento" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-
-        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition">Pagar</button>
-      </form>
+        <div class="resumo__meios">
+          <b>Meios de pagamento</b>
+          Cartão de crédito · PIX · Boleto bancário
+        </div>
+        <div class="confianca">
+          <ul>
+            <li>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="4" y="11" width="16" height="10" rx="2"></rect>
+                <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+              </svg>
+              Seus dados viajam criptografados
+            </li>
+            <li>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M12 3.5 20.5 12 12 20.5 3.5 12z"></path>
+              </svg>
+              Confirmação por e-mail na hora
+            </li>
+            <li>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M4 12.5 9.5 18 20 6.5"></path>
+              </svg>
+              Processado pelo Mercado Pago
+            </li>
+          </ul>
+        </div>
+      </aside>
     </div>
   </div>
 
@@ -109,20 +786,51 @@
         });
       });
 
+      // apresentação: valor e descrição do resumo acompanham os campos (não toca no payload)
+      const brl = v => 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+      const valorInput = document.getElementById('transaction_amount');
+      const descInput = document.getElementById('description');
+      const valorBotao = document.getElementById('valor-botao');
+      const resumoValor = document.getElementById('resumo-valor');
+      const resumoDesc = document.getElementById('resumo-desc');
+      const sincroniza = () => {
+        const v = brl(valorInput.value);
+        valorBotao.textContent = v;
+        resumoValor.textContent = v;
+        const d = descInput.value.trim();
+        resumoDesc.textContent = d || 'Pedido OLTS Tech';
+      };
+      valorInput.addEventListener('input', sincroniza);
+      descInput.addEventListener('input', sincroniza);
+      sincroniza();
+
       function showStatus(success, message) {
         checkoutContainer.classList.add('opacity-0', 'pointer-events-none');
-        overlay.classList.remove('bg-white', 'bg-opacity-90');
-        overlay.classList.add(success ? 'bg-green-100' : 'bg-red-100');
+        overlay.classList.remove('overlay--ok', 'overlay--erro');
+        overlay.classList.add(success ? 'overlay--ok' : 'overlay--erro');
         spinner.classList.add('hidden');
-        // Centragem dos ícones e mensagens
+        // estados em PT: sucesso e falha dizem o que fazer em seguida
         overlayText.innerHTML = success
-          ? `<div class="flex flex-col items-center"><div class="text-8xl text-green-600 animate-ping">🎉</div><p class="mt-4 text-2xl font-bold text-green-800">${message}</p></div>`
-          : `<div class="flex flex-col items-center"><div class="text-8xl text-red-600 animate-shake">⚠️</div><p class="mt-4 text-2xl font-bold text-red-800">${message}</p></div>`;
+          ? `<div class="estado">
+               <div class="estado__icone" aria-hidden="true">
+                 <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4.5 12.5 10 18 19.5 6.5"/></svg>
+               </div>
+               <p class="estado__titulo">${message}</p>
+               <p class="estado__apoio">A confirmação sai por e-mail em instantes. Pode fechar esta aba.</p>
+             </div>`
+          : `<div class="estado estado--erro">
+               <div class="estado__icone" aria-hidden="true">
+                 <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 6.5v7"/><path d="M12 17.2v.3"/></svg>
+               </div>
+               <p class="estado__titulo">${message}</p>
+               <p class="estado__apoio">Confira os dados digitados e tente de novo. Se o problema continuar, fale com o suporte.</p>
+             </div>`;
         newPaymentBtn.classList.remove('hidden');
       }
 
       newPaymentBtn.addEventListener('click', () => {
         overlay.classList.add('hidden');
+        overlay.classList.remove('overlay--ok', 'overlay--erro');
         newPaymentBtn.classList.add('hidden');
         checkoutContainer.classList.remove('opacity-0', 'pointer-events-none');
         checkoutContainer.classList.remove('opacity-50');
@@ -130,9 +838,8 @@
         cardInputs.forEach(i => i.disabled = false);
         pixInputs.forEach(i => i.disabled = true);
         boletoInputs.forEach(i => i.disabled = true);
-        overlay.classList.add('bg-white', 'bg-opacity-90');
-        overlay.classList.remove('bg-green-100', 'bg-red-100');
         overlayText.textContent = 'Processando pagamento...';
+        sincroniza();
       });
 
       form.addEventListener('submit', async (e) => {
@@ -164,10 +871,10 @@
             return;
           }
           // Cartão
-          showStatus(json.status === 'approved', json.status === 'approved' ? 'Pagamento Aprovado!' : 'Pagamento Recusado');
+          showStatus(json.status === 'approved', json.status === 'approved' ? 'Pagamento aprovado' : 'Pagamento recusado');
 
         } catch (err) {
-          showStatus(false, 'Erro na requisição');
+          showStatus(false, 'Não foi possível processar');
         }
       });
     });

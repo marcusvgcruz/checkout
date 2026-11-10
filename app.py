@@ -15,8 +15,9 @@ mp = MercadoPago()
 @app.get('/', response_class=HTMLResponse)
 async def checkout_page(request: Request):
     return templates.TemplateResponse(
+        request,
         name='checkout.html',
-        context={'request': request},
+        context={},
     )
 
 
