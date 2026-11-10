@@ -103,4 +103,4 @@ async def create_payment(request: Request):
         return JSONResponse(result)
     
     except RuntimeError as err:
-        raise HTTPException(status_code=502, detail=(err))
+        raise HTTPException(status_code=502, detail=str(err))
