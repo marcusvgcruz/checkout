@@ -31,7 +31,7 @@ async def create_payment(request: Request):
         if method == 'card':
             card_data = {
                 'card_number': data.get('card_number'),
-                'expiration_mounth': data.get('expiration_mounth'),
+                'expiration_month': data.get('expiration_month'),
                 'expiration_year': data.get('expiration_year'),
                 'security_code': data.get('security_code'),
                 'cardholder': {

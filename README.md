@@ -77,7 +77,7 @@ Cartão:
   "transaction_amount": 100,
   "description": "Pedido 123",
   "card_number": "5031 4332 1540 6351",
-  "expiration_mounth": "11",
+  "expiration_month": "11",
   "expiration_year": "2030",
   "security_code": "123",
   "cardholder_name": "NOME NO CARTAO",
