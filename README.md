@@ -29,7 +29,7 @@ dados de cada forma de pagamento.
 - Jinja2 para o template do checkout
 - Requests para falar com a API do Mercado Pago
 - python-decouple para ler as variáveis do `.env`
-- Tailwind via CDN no template
+- CSS próprio no template (sem framework via CDN)
 
 ## Como rodar
 
